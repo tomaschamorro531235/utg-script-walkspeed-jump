@@ -1,0 +1,62 @@
+-- Script para implementar hasta tres saltos, activado con la tecla E
+-- Coloca este script en un LocalScript dentro de StarterPlayerScripts
+
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Variables para controlar los saltos
+local jumpCount = 0
+local maxJumps = 3
+local tripleJumpEnabled = false
+
+-- Función para resetear el conteo de saltos al aterrizar
+local function onCharacterLanded()
+jumpCount = 0
+end
+
+-- Configurar las conexiones para el personaje del jugador
+local function onCharacterAdded(character)
+local humanoid = character:WaitForChild("Humanoid")
+humanoid.StateChanged:Connect(function(_, newState)
+if newState == Enum.HumanoidStateType.Landed then
+onCharacterLanded()
+end
+end)
+end
+
+-- Conectar las funciones cuando el personaje del jugador está disponible
+player.CharacterAdded:Connect(onCharacterAdded)
+if player.Character then
+onCharacterAdded(player.Character)
+end
+
+-- Detectar cuando se presiona la tecla E para activar el triple salto
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+if gameProcessed then return end
+if input.KeyCode == Enum.KeyCode.E then
+tripleJumpEnabled = true
+end
+end)
+
+-- Detectar cuando se suelta la tecla E para desactivar el triple salto
+UserInputService.InputEnded:Connect(function(input, gameProcessed)
+if gameProcessed then return end
+if input.KeyCode == Enum.KeyCode.E then
+tripleJumpEnabled = false
+jumpCount = 0 -- Resetear el contador de saltos al soltar la tecla E
+end
+end)
+
+-- Detectar la solicitud de salto y permitir hasta tres saltos
+UserInputService.JumpRequest:Connect(function()
+if not tripleJumpEnabled then return end
+
+local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+if humanoid and jumpCount < maxJumps then
+humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+jumpCount = jumpCount + 1
+print("Salto #" .. jumpCount .. " realizado")
+end
+end)
+print("Triple salto activado con la tecla E. Mantén presionada la tecla E para realizar hasta tres saltos.")
